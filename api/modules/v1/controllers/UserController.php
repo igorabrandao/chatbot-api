@@ -39,19 +39,22 @@ class UserController extends ActiveController
                 'recover-password',
                 'check-reset-password-token',
                 'reset-password',
-                'register-delivery-request']
+                'register-delivery-request'
+            ]
         ];
 
         return $behaviors;
     }
 
-    public function actions() {
+    public function actions()
+    {
         $actions = parent::actions();
         unset($actions['index']);
         return $actions;
     }
 
-    public function actionIndex() {
+    public function actionIndex()
+    {
         $activeData = new ActiveDataProvider([
             'query' => User::find(),
             'pagination' => false
@@ -86,38 +89,10 @@ class UserController extends ActiveController
         }
 
         if ($user->save()) {
-            $this->generateAdminIngress($user);
             Yii::$app->user->login($user);
         }
-        
+
         return $user;
-    }
-
-    public function generateAdminIngress($user)
-    {
-        $ingress_storage = new IngressStorage();
-
-        $ingress_storage->ingress = uniqid();
-        $ingress_storage->user_id = $user->id;
-        $ingress_storage->request_from = Yii::$app->request->getUserIP();
-
-        if ($ingress_storage->save()) {
-            Yii::$app->mailer->compose()
-                ->setSubject(Yii::$app->params['messages']['productName'] . ' - Token de acesso administrador')
-                ->setFrom(Yii::$app->params['sender']['email'])
-                ->setTo($user->email)
-                ->setHtmlBody("
-                <p>Olá!</p>
-                <p>Você solicitou um novo acesso ao painel a partir de uma conta de administrador.</p>
-                <p>Seu código de verificação para login é: <b>{$ingress_storage->ingress}</b></p>
-                <p>Atenciosamente,<br/>Equipe " . Yii::$app->params['messages']['productName'] . "</p>
-            ")->send();
-
-            Yii::$app->response->setStatusCode(202);
-            return [
-                'status' => 202
-            ];
-        }
     }
 
     public function actionRecoverPassword()
@@ -161,7 +136,6 @@ class UserController extends ActiveController
         return [
             'status' => 200
         ];
-
     }
 
     public function actionCheckResetPasswordToken()
@@ -208,8 +182,7 @@ class UserController extends ActiveController
                 <p>Informamos que sua senha no serviço " . Yii::$app->params['messages']['productName'] . " foi alterada com sucesso.</p>
                 <p>Caso essa alteração não tenha sido feita por você, entre em contato conosco, pois é possível que outra pessoa esteja usando sua conta.</p>
                 <p> Atenciosamente,<br/> Equipe " . Yii::$app->params['messages']['productName'] . " </p>
-            ")
-                ->send();
+            ")->send();
 
             Yii::$app->response->setStatusCode(200);
             return [
@@ -222,18 +195,18 @@ class UserController extends ActiveController
     {
         $request = Yii::$app->request;
 
-        if (!$request->post('name') ||
+        if (
+            !$request->post('name') ||
             !$request->post('email') ||
             !$request->post('cpf') ||
             !$request->post('password') ||
-            !$request->post('phone_area_code') ||
-            !$request->post('birth_date') ||
-            !$request->post('phone_number')) {
-            throw new BadRequestHttpException('Campos obrigatórios precisam ser preenchidos.');
+            !$request->post('birth_date')
+        ) {
+            throw new BadRequestHttpException('Mandatory fields must be filled.');
         }
 
         if (User::find()->where(['email' => $request->post('email')])->one()) {
-            throw new BadRequestHttpException('O e-mail informado já foi cadastrado.');
+            throw new BadRequestHttpException('The informed email has already been registered.');
         }
 
         /** @var User $user */
@@ -241,49 +214,13 @@ class UserController extends ActiveController
         $user->name = $request->post('name');
         $user->email = $request->post('email');
         $user->cpf = $request->post('cpf');
-        $user->phone_area_code = $request->post('phone_area_code');
-        $user->phone_number = $request->post('phone_number');
         $user->birth_date = $request->post('birth_date');
         $user->is_active = 1;
-        $user->access_level = User::client;
 
         if (!$user->save()) {
             return $user->getFirstErrors();
         }
 
         return User::find()->where(['email' => $user->email])->one();
-    }
-
-    public function actionRegisterDeliveryRequest()
-    {
-        $request = Yii::$app->request;
-        $name = $request->post('name');
-        $phone = $request->post('phone');
-        $email = $request->post('email');
-        $address = $request->post('address');
-
-        $adminEmails = [];
-        foreach (User::find()->all() as $user) {
-            if ($user->access_level == User::sysAdmin) {
-                $adminEmails[] = $user->email;
-            }
-        }
-
-        $subject = "Tenho interesse em ser Entregador - Contato";
-
-        $body = '<h3>De: ' . $name . '</h3>
-            <h4>Telefone: ' . $phone . '</h4>
-            <h4>Email: ' . $email . '</h4>
-            <hr>
-            <h3>Endereço:</h3>
-            <p>' . $address . '</p>';
-
-
-        Yii::$app->mailer->compose()
-            ->setFrom(Yii::$app->params['sender']['email'])
-            ->setTo($adminEmails)
-            ->setSubject($subject)
-            ->setHtmlBody($body)
-            ->send();
     }
 }

@@ -61,15 +61,16 @@ return [
                     'controller' => 'v1/user',
                     'extraPatterns' => [
                         'OPTIONS <whatever:.*>' => 'options',
+                        // ***************************************************
+                        // ** User endpoints
+                        // ***************************************************
                         'POST login' => 'login',
-                        'POST login-by-code' => 'login-by-code',
-                        'POST check-ingress-code' => 'check-ingress-code',
                         'POST recover-password' => 'recover-password',
                         'POST reset-password' => 'reset-password',
                         'POST register-client' => 'register-client',
                         'POST check-reset-password-token' => 'check-reset-password-token',
-                        'POST register-delivery-request' => 'register-delivery-request',
-                        'GET generate-wirecard-customer-id' => 'generate-wirecard-customer-id',
+                        
+                        
                         'GET get-webfarma-delivery-staff' => 'get-webfarma-delivery-staff',
                         'GET get-webfarma-delivery' => 'get-webfarma-delivery',
                         'POST register-my-location' => 'register-my-location',
@@ -78,10 +79,14 @@ return [
                 ],
                 [
                     'class' => 'yii\rest\UrlRule',
-                    'controller' => 'v1/merchandise',
+                    'controller' => 'v1/chatbot',
+                    'pluralize' => false,
                     'extraPatterns' => [
                         'OPTIONS <whatever:.*>' => 'options',
-                        'POST search-string' => 'search-string',
+                        // ***************************************************
+                        // ** Chatbot endpoints
+                        // ***************************************************
+                        'GET generate-welcome-message' => 'generate-welcome-message',
                     ]
                 ],
                 [
@@ -195,7 +200,8 @@ return [
                         'v1/product',
                         'v1/location',
                         'v1/evaluation',
-                        'v1/fiscal-governance'],
+                        'v1/fiscal-governance'
+                    ],
                     'extraPatterns' => [
                         'OPTIONS <whatever:.*>' => 'options',
                     ]
