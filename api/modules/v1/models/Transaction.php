@@ -25,6 +25,7 @@ class Transaction extends \yii\db\ActiveRecord
     const DEPOSIT = 'D';
     const WITHDRAW = 'W';
     const SHOW_BALANCE = 'SB';
+    const QUOTATION = 'Q';
 
     // Transaction status consts
     const COMPLETE = 1;
@@ -47,7 +48,7 @@ class Transaction extends \yii\db\ActiveRecord
             [['type', 'amount', 'origin_wallet', 'status'], 'required'],
             [['amount'], 'number'],
             [['origin_wallet', 'destiny_wallet', 'status'], 'integer'],
-            [['type'], 'string'],
+            [['type', 'from_currency', 'to_currency'], 'string'],
             [['created_at', 'updated_at'], 'safe'],
             [['origin_wallet'], 'exist', 'skipOnError' => true, 'targetClass' => Wallet::className(), 'targetAttribute' => ['wallet_id' => 'id']],
             [['destiny_wallet'], 'exist', 'skipOnError' => true, 'targetClass' => Wallet::className(), 'targetAttribute' => ['wallet_id' => 'id']],
@@ -75,6 +76,8 @@ class Transaction extends \yii\db\ActiveRecord
             'amount' => 'Transaction Amount',
             'origin_wallet' => 'Transaction Origin Wallet',
             'destiny_wallet' => 'Transaction Destiny Wallet',
+            'from_currency' => 'From Currency',
+            'to_currency' => 'To Currency',
             'status' => 'Transaction Status',
             'created_at' => 'Created At',
             'updated_at' => 'Updated At',
@@ -127,6 +130,14 @@ class Transaction extends \yii\db\ActiveRecord
     public function isShowBalance()
     {
         return $this->type == self::SHOW_BALANCE;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isCurrencyQuotation()
+    {
+        return $this->type == self::QUOTATION;
     }
 
     /**

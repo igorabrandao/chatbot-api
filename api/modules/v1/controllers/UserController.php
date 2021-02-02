@@ -2,9 +2,7 @@
 
 namespace api\modules\v1\controllers;
 
-use api\modules\v1\models\IngressStorage;
 use api\modules\v1\models\User;
-
 use Yii;
 use yii\data\ActiveDataProvider;
 use yii\rest\ActiveController;

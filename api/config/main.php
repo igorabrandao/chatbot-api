@@ -87,59 +87,19 @@ return [
                         // ** Chatbot endpoints
                         // ***************************************************
                         'GET generate-welcome-message' => 'generate-welcome-message',
+                        'POST receive-message' => 'receive-message',
                     ]
                 ],
                 [
                     'class' => 'yii\rest\UrlRule',
-                    'controller' => 'v1/company',
-                    'extraPatterns' => [
-                        'OPTIONS <whatever:.*>' => 'options',
-                        'POST get-by-category' => 'get-by-category',
-                        'POST open-store' => 'open-store',
-                        'POST close-store' => 'close-store',
-                        'POST get-store-profile' => 'get-store-profile',
-                    ]
-                ],
-                [
-                    'class' => 'yii\rest\UrlRule',
-                    'controller' => 'v1/upload',
-                    'tokens' => ['{id}' => '<id:\w+>'],
-                    'except' => ['update']
-                ],
-                [
-                    'class' => 'yii\rest\UrlRule',
-                    'controller' => 'v1/purchase',
-                    'extraPatterns' => [
-                        'OPTIONS <whatever:.*>' => 'options',
-                        'POST pay-by-credit-card' => 'pay-by-credit-card',
-                        'POST reject-purchase' => 'reject-purchase',
-                        'GET company-review-purchases' => 'company-review-purchases',
-                        'GET company-purchases' => 'company-purchases',
-                        'GET calculate-delivery-price' => 'calculate-delivery-price',
-                    ]
-                ],
-                [
-                    'class' => 'yii\rest\UrlRule',
-                    'controller' => 'v1/wirecard',
+                    'controller' => 'v1/transaction',
                     'pluralize' => false,
                     'extraPatterns' => [
                         'OPTIONS <whatever:.*>' => 'options',
-                        'GET get-permission-request-uri' => 'get-permission-request-uri',
-                        'GET get-delivery-permission-uri' => 'get-delivery-permission-uri',
-                        'GET redirect' => 'redirect',
-                        'POST receive-notification' => 'receive-notification',
-                    ]
-                ],
-                [
-                    'class' => 'yii\rest\UrlRule',
-                    'controller' => 'v1/distribution',
-                    'extraPatterns' => [
-                        'OPTIONS <whatever:.*>' => 'options',
-                        'GET get-my-active-deliveries' => 'get-my-active-deliveries',
-                        'GET get-my-pre-assigned-deliveries' => 'get-my-pre-assigned-deliveries',
-                        'GET get-my-deliveries' => 'get-my-deliveries',
-                        'POST send-proximity-alert' => 'send-proximity-alert',
-                        'POST refuse-delivery' => 'refuse-delivery',
+                        // ***************************************************
+                        // ** Transaction endpoints
+                        // ***************************************************
+                        'POST convert-currency' => 'convert-currency',
                     ]
                 ],
                 [
