@@ -106,6 +106,10 @@ class TransactionController extends ActiveController
             // Set the opration
             $operation = "latest";
 
+            // Prepare the input
+            $from_currency = strtoupper($from_currency);
+            $to_currency = strtoupper($to_currency);
+
             // Prepare the request data
             $conversionData = array();
             $conversionData['base'] = $from_currency;
@@ -117,8 +121,10 @@ class TransactionController extends ActiveController
             if (isset($result)) {
                 // Decode the json to array
                 $result = json_decode($result, true);
-                $result['original_amount'] = $amount;
+                $result['amount'] = $amount;
                 $result['converted_amount'] = $amount * $result["rates"][$to_currency];
+                $result['from_currency'] = $from_currency;
+                $result['to_currency'] = $to_currency;
             } else {
                 throw new HttpException('It was not possible to contact the currency exchange server.');
             }

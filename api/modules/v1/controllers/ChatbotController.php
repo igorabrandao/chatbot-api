@@ -38,7 +38,7 @@ class ChatbotController extends ActiveController
     ];
 
     private $currencyIntent = [
-        'currency', 'set currency', 'quotation', 'exchange', 'change', 'money', 'cash', 'paper', 
+        'convert', 'currency', 'set currency', 'quotation', 'quote', 'exchange', 'change', 'money', 'cash', 'paper', 
         'bill', 'coin', 'specie', 'dollar', 'euro', 'real'
     ];
 
@@ -120,7 +120,7 @@ class ChatbotController extends ActiveController
 
                 // Currency
                 if (in_array($item, $this->currencyIntent)) {
-                    $actionToPerform = 'currency';
+                    $actionToPerform = 'quotation';
                     break;
                 }
             }
