@@ -106,7 +106,7 @@ return [
                         // ** Wallet endpoints
                         // ***************************************************
                         'POST register-wallet' => 'register-wallet',
-                        'POST set-default-wallet/<wallet_code_:\w+>' => 'set-default-wallet'
+                        'POST set-default-wallet' => 'set-default-wallet'
                     ]
                 ],
                 [

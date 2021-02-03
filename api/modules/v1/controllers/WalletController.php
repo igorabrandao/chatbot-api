@@ -83,13 +83,22 @@ class WalletController extends ActiveController
      * @return string Actual store status
      * @throws HttpException
      */
-    public function actionSetDefaultWallet($wallet_code_)
+    public function actionSetDefaultWallet()
     {
+        $request = Yii::$app->request;
+
+        // Check the required info
+        if (
+            !$request->post('code')
+        ) {
+            throw new BadRequestHttpException('The wallet code field must be informed.');
+        }
+
         // Retrieve the wallet info
-        $wallet = Wallet::find()->where(['code' => $wallet_code_])->one();
+        $wallet = Wallet::find()->where(['code' => $request->post('code')])->one();
 
         if (!isset($wallet)) {
-            throw new BadRequestHttpException('The wallet ' . $wallet_code_ . ' does not exist.');
+            throw new BadRequestHttpException('The wallet ' . $request->post('code') . ' does not exist.');
         }
 
         // Set the wallet as default
@@ -102,7 +111,7 @@ class WalletController extends ActiveController
 
             // Retrieve all the user wallets
             $userWallets = Wallet::find()->where(['user_id' => $userId])
-                ->andWhere(['<>','code', $wallet_code_])
+                ->andWhere(['<>','code', $request->post('code')])
                 ->all();
 
             if (isset($userWallets)) {
