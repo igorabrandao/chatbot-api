@@ -78,9 +78,34 @@ class WalletController extends ActiveController
     }
 
     /**
+     * Check if the user has a default wallet
+     */
+    public function actionCheckDefaultWallet()
+    {
+        $request = Yii::$app->request;
+
+        // Check the required info
+        if (
+            !$request->post('user_id')
+        ) {
+            throw new BadRequestHttpException('The user ID field must be informed.');
+        }
+
+        // Retrieve the wallet info
+        $userWallets = Wallet::find()->where(['user_id' => $request->post('user_id')])
+                ->andWhere(['is_default' => Wallet::ISDEFAULT])
+                ->all();
+
+        if (sizeof($userWallets) > 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
      * Set wallet status to default
      * 
-     * @return string Actual store status
      * @throws HttpException
      */
     public function actionSetDefaultWallet()
@@ -130,7 +155,6 @@ class WalletController extends ActiveController
     /**
      * Remove the wallet status as default
      * 
-     * @return string Actual store status
      * @throws HttpException
      */
     private function actionRemoveDefaultWallet($wallet_code_)

@@ -43,9 +43,13 @@ class ChatbotController extends ActiveController
         'instal', 'install', 'establish', 'constitute', 'hire', 'invest in', 'start', 'begin', 'init', 'initialize'
     ];
 
-    private $currencyIntent = [
-        'convert', 'currency', 'set currency', 'quotation', 'quote', 'exchange', 'change', 'money', 'cash', 'paper', 
-        'bill', 'coin', 'specie', 'dollar', 'euro', 'real'
+    private $quotationIntent = [
+        'convert', 'quotation', 'quote', 'exchange', 'change', 'money', 'cash', 'paper', 
+        'bill', 'coin', 'specie', 'dollar', 'euro', 'real', 'usd', 'eur', 'brl'
+    ];
+
+    private $setCurrencyIntent = [
+        'set currency', 'currency', 'default', 'current'
     ];
 
     // ***************************************************
@@ -132,8 +136,14 @@ class ChatbotController extends ActiveController
                     break;
                 }
 
-                // Currency
-                if (in_array($item, $this->currencyIntent)) {
+                // Set currency
+                if (in_array($item, $this->setCurrencyIntent)) {
+                    $actionToPerform = 'setCurrency';
+                    break;
+                }
+
+                // Quotation
+                if (in_array($item, $this->quotationIntent)) {
                     $actionToPerform = 'quotation';
                     break;
                 }
