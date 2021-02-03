@@ -28,16 +28,8 @@ class UserController extends ActiveController
         $behaviors['authenticator'] = [
             'class' => HttpBearerAuth::className(),
             'except' => [
-                'create',
-                'login',
-                'register-client',
-                'login-by-code',
-                'check-ingress-code',
-                'options',
-                'recover-password',
-                'check-reset-password-token',
-                'reset-password',
-                'register-delivery-request'
+                'create', 'options', 'login', 'register-user',
+                'recover-password', 'check-reset-password-token', 'reset-password'
             ]
         ];
 
@@ -189,7 +181,7 @@ class UserController extends ActiveController
         }
     }
 
-    public function actionRegisterClient()
+    public function actionRegisterUser()
     {
         $request = Yii::$app->request;
 

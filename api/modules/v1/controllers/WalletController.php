@@ -34,6 +34,116 @@ class WalletController extends ActiveController
         return $behaviors;
     }
 
+    /**
+     * Function to register a new wallet
+     */
+    public function actionRegisterWallet()
+    {
+        $request = Yii::$app->request;
+
+        // Check the required info
+        if (
+            !$request->post('user_id') ||
+            !$request->post('currency')
+        ) {
+            throw new BadRequestHttpException('Mandatory fields must be filled.');
+        }
+
+        // Check if the user already have an wallet with the same currency
+        if (Wallet::find()->where(['user_id' => $request->post('user_id')])
+            ->andWhere(['currency' => $request->post('currency')])->one()) {
+            throw new BadRequestHttpException('The user already have one ' . strtoupper($request->post('currency')) . ' wallet.');
+        }
+
+        // Set the new wallet attributes
+        $wallet = new Wallet();
+        $wallet->code = md5(uniqid(rand(), true));
+        $wallet->user_id = $request->post('user_id');
+        $wallet->currency = strtoupper($request->post('currency'));
+        $wallet->balance = 0.00;
+        
+        // Check if the user already have a default wallet
+        if (Wallet::find()->where(['user_id' => $request->post('user_id')])
+            ->andWhere(['is_default' => 1])->one()) {
+            $wallet->is_default = Wallet::ISNOTDEFAULT;
+        } else {
+            $wallet->is_default = Wallet::ISDEFAULT;
+        }
+
+        if (!$wallet->save()) {
+            return $wallet->getFirstErrors();
+        }
+
+        return $wallet;
+    }
+
+    /**
+     * Set wallet status to default
+     * 
+     * @return string Actual store status
+     * @throws HttpException
+     */
+    public function actionSetDefaultWallet($wallet_code_)
+    {
+        // Retrieve the wallet info
+        $wallet = Wallet::find()->where(['code' => $wallet_code_])->one();
+
+        if (!isset($wallet)) {
+            throw new BadRequestHttpException('The wallet ' . $wallet_code_ . ' does not exist.');
+        }
+
+        // Set the wallet as default
+        $wallet->is_default = Wallet::ISDEFAULT;
+
+        // Save the wallet
+        if ($wallet->save()) {
+            // Get the user ID
+            $userId = $wallet->user_id;
+
+            // Retrieve all the user wallets
+            $userWallets = Wallet::find()->where(['user_id' => $userId])
+                ->andWhere(['<>','code', $wallet_code_])
+                ->all();
+
+            if (isset($userWallets)) {
+                // Unset all user wallets except the current setted
+                foreach ($userWallets as $item) {
+                    $this->actionRemoveDefaultWallet($item->code);
+                }
+            }
+
+            return true;
+        } else {
+            throw new ServerErrorHttpException();
+        }
+    }
+
+    /**
+     * Remove the wallet status as default
+     * 
+     * @return string Actual store status
+     * @throws HttpException
+     */
+    private function actionRemoveDefaultWallet($wallet_code_)
+    {
+        // Retrieve the wallet info
+        $wallet = Wallet::find()->where(['code' => $wallet_code_])->one();
+
+        if (!isset($wallet)) {
+            throw new BadRequestHttpException('The wallet ' . $wallet_code_ . ' does not exist.');
+        }
+
+        // Remove the default status
+        $wallet->is_default = Wallet::ISNOTDEFAULT;
+
+        // Save the operation
+        if ($wallet->save()) {
+            return true;
+        } else {
+            throw new ServerErrorHttpException();
+        }
+    }
+
     public function actionGetByCurrency()
     {
         $request = Yii::$app->request;
@@ -70,72 +180,5 @@ class WalletController extends ActiveController
         return $models;
     }
 
-    /**
-     * Set wallet status to open.
-     * @return string Actual store status
-     * @throws HttpException
-     */
-    public function actionSetDefaultWallet()
-    {
-        $userId = \Yii::$app->user->id;
-        $user = User::findOne($userId);
-        $wallet = Wallet::findOne($user->wallet_id);
-
-        $wallet->is_open = Wallet::ISDEFAULT;
-
-        if ($wallet->save()) {
-            return "true";
-        } else {
-            throw new ServerErrorHttpException();
-        }
-    }
-
-    /**
-     * Set wallet status to closed.
-     * @return string Actual store status
-     * @throws HttpException
-     */
-    public function actionRemoveDefaultWallet()
-    {
-        $userId = \Yii::$app->user->id;
-        $user = User::findOne($userId);
-        $wallet = Wallet::findOne($user->wallet_id);
-
-        $wallet->is_open = Wallet::ISNOTDEFAULT;
-
-        if ($wallet->save()) {
-            return "false";
-        } else {
-            throw new ServerErrorHttpException();
-        }
-    }
-
-    public function actionGetStoreProfile()
-    {
-        $request = Yii::$app->request;
-        $walletId = $request->post('wallet_id');
-        $paginationPageSize = $request->post('per-page');
-        $paginationPage = $request->post('page');
-
-        if (!$walletId || !$paginationPageSize || !$paginationPage) {
-            throw new BadRequestHttpException('Basic input not provided');
-        }
-
-        $queryWalletProfile = Wallet::find()
-            ->joinWith('location')
-            ->joinWith('merchandises.product')
-            ->where(['=', 'wallet.id', $walletId]);
-
-        $countQuery = clone $queryWalletProfile;
-        $pages = new Pagination(['totalCount' => $countQuery->count(), 'pageSize' => $paginationPageSize, 'page' => $paginationPage - 1]);
-        $models = $queryWalletProfile->offset($pages->offset)
-            ->limit($pages->limit)
-            ->asArray()
-            ->all();
-
-        header('X-Pagination-Total-Count: ' . $pages->totalCount);
-        header('X-Pagination-Per-Page: ' . $pages->getPageSize());
-
-        return $models;
-    }
+    
 }

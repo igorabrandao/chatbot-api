@@ -28,13 +28,19 @@ class ChatbotController extends ActiveController
 
     // Chatbot intents
     private $loginIntent = [
-        'login', 'signin', 'sign-in', 'logon', 'log-on', 'enter', 'access', 'account', 'enter', 'open', 
+        'login', 'signin', 'sign-in', 'sign in', 'logon', 'log-on', 'enter', 'access', 'enter', 'open', 
         'connect', 'auth', 'connection', 'enroll', 'authenticate', 'subscribe', 'in'
     ];
 
     private $logoutIntent = [
-        'logout', 'signout', 'sign-out', 'log-out', 'exit', 'quit', 'away', 'close', 
+        'logout', 'signout', 'sign-out', 'sign out', 'log-out', 'exit', 'quit', 'away', 'close', 
         'disconnect', 'disconnection', 'unroll', 'unauthenticate', 'unsubscribe', 'out'
+    ];
+
+    private $registerIntent = [
+        'register', 'signup', 'sign-up', 'sign up', 'create', 'account', 'roll', 'record', 'set account',
+        'submit', 'engage', 'recruit', 'engage', 'take on', 'admit', 'lay on', 'employ', 'make', 'assign', 
+        'instal', 'install', 'establish', 'constitute', 'hire', 'invest in', 'start', 'begin', 'init', 'initialize'
     ];
 
     private $currencyIntent = [
@@ -101,6 +107,9 @@ class ChatbotController extends ActiveController
         } else {
             $actionToPerform = '';
 
+            // Prepare the message
+            $message = strtolower($message);
+
             // Perform the message screening
             $words = preg_split('/ +/', $message);
 
@@ -109,6 +118,11 @@ class ChatbotController extends ActiveController
                 // Login
                 if (in_array($item, $this->loginIntent)) {
                     $actionToPerform = 'login';
+                    break;
+                }
+
+                if (in_array($item, $this->registerIntent)) {
+                    $actionToPerform = 'register';
                     break;
                 }
 

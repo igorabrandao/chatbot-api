@@ -67,14 +67,8 @@ return [
                         'POST login' => 'login',
                         'POST recover-password' => 'recover-password',
                         'POST reset-password' => 'reset-password',
-                        'POST register-client' => 'register-client',
+                        'POST register-user' => 'register-user',
                         'POST check-reset-password-token' => 'check-reset-password-token',
-                        
-                        
-                        'GET get-webfarma-delivery-staff' => 'get-webfarma-delivery-staff',
-                        'GET get-webfarma-delivery' => 'get-webfarma-delivery',
-                        'POST register-my-location' => 'register-my-location',
-                        'POST register-my-city' => 'register-my-city',
                     ]
                 ],
                 [
@@ -104,52 +98,15 @@ return [
                 ],
                 [
                     'class' => 'yii\rest\UrlRule',
-                    'controller' => 'v1/purchase',
-                    'extraPatterns' => [
-                        'OPTIONS <whatever:.*>' => 'options',
-                        'GET get-my-purchases' => 'get-my-purchases',
-                    ]
-                ],
-                [
-                    'class' => 'yii\rest\UrlRule',
-                    'controller' => 'v1/payment',
-                    'extraPatterns' => [
-                        'OPTIONS <whatever:.*>' => 'options',
-                        'POST perform-payment' => 'perform-payment',
-                    ]
-                ],
-                [
-                    'class' => 'yii\rest\UrlRule',
-                    'controller' => 'v1/device',
-                    'extraPatterns' => [
-                        'OPTIONS <whatever:.*>' => 'options',
-                        'POST save-new-device' => 'save-new-device',
-                    ]
-                ],
-                [
-                    'class' => 'yii\rest\UrlRule',
-                    'controller' => 'v1/push-notification',
+                    'controller' => 'v1/wallet',
                     'pluralize' => false,
                     'extraPatterns' => [
                         'OPTIONS <whatever:.*>' => 'options',
-                        'POST send-push-notification' => 'send-push-notification',
-                    ]
-                ],
-                [
-                    'class' => 'yii\rest\UrlRule',
-                    'controller' => 'v1/contact',
-                    'pluralize' => false,
-                    'extraPatterns' => [
-                        'OPTIONS <whatever:.*>' => 'options',
-                        'POST send-email' => 'send-email',
-                    ]
-                ],
-                [
-                    'class' => 'yii\rest\UrlRule',
-                    'controller' => 'v1/import',
-                    'extraPatterns' => [
-                        'OPTIONS <whatever:.*>' => 'options',
-                        'POST import-company-products' => 'import-company-products',
+                        // ***************************************************
+                        // ** Wallet endpoints
+                        // ***************************************************
+                        'POST register-wallet' => 'register-wallet',
+                        'POST set-default-wallet/<wallet_code_:\w+>' => 'set-default-wallet'
                     ]
                 ],
                 [

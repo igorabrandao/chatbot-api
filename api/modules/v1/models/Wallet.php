@@ -9,11 +9,11 @@ use yii\behaviors\TimestampBehavior;
  * This is the model class for table "wallet".
  *
  * @property int $id
- * @property int $number
+ * @property string $code
  * @property int $user_id
  * @property string $currency
  * @property string $balance
- * @property int $isDefault
+ * @property int $is_default
  * @property string $created_at
  * @property string $updated_at
  *
@@ -38,12 +38,11 @@ class Wallet extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['number', 'user_id', 'currency', 'balance', 'isDefault'], 'required'],
+            [['code', 'user_id', 'currency', 'balance', 'is_default'], 'required'],
             [['balance'], 'number'],
-            [['currency'], 'string'],
-            [['number', 'user_id', 'isDefault'], 'integer'],
+            [['code', 'currency'], 'string'],
+            [['user_id', 'is_default'], 'integer'],
             [['created_at', 'updated_at'], 'safe'],
-            [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::className(), 'targetAttribute' => ['wallet_id' => 'id']],
         ];
     }
 
@@ -64,11 +63,11 @@ class Wallet extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'number' => 'Wallet Number',
+            'code' => 'Wallet Code',
             'user_id' => 'User ID',
             'currency' => 'Wallet Currency',
             'balance' => 'Wallet Balance',
-            'isDefault' => 'Is Default Wallet',
+            'is_default' => 'Is Default Wallet',
             'created_at' => 'Created At',
             'updated_at' => 'Updated At',
         ];
@@ -84,7 +83,7 @@ class Wallet extends \yii\db\ActiveRecord
     /**
      * @return \yii\db\ActiveQuery
      */
-    public function getLocation()
+    public function getUser()
     {
         return $this->hasOne(User::className(), ['wallet_id' => 'id']);
     }
@@ -92,7 +91,7 @@ class Wallet extends \yii\db\ActiveRecord
     /**
      * @return boolean
      */
-    public function isDefault()
+    public function is_default()
     {
         return $this->is_default == self::ISDEFAULT;
     }

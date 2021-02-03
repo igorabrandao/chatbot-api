@@ -13,6 +13,8 @@ use yii\behaviors\TimestampBehavior;
  * @property string $amount
  * @property int $origin_wallet
  * @property int $destiny_wallet
+ * @property string $from_currency
+ * @property string $to_currency
  * @property int $status
  * @property string $created_at
  * @property string $updated_at
