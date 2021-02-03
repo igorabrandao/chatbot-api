@@ -38,7 +38,7 @@ class ChatbotController extends ActiveController
     ];
 
     private $registerIntent = [
-        'register', 'signup', 'sign-up', 'sign up', 'create', 'account', 'roll', 'record', 'set account',
+        'register', 'signup', 'sign-up', 'sign up', 'create account', 'account', 'roll', 'record', 'set account',
         'submit', 'engage', 'recruit', 'engage', 'take on', 'admit', 'lay on', 'employ', 'make', 'assign', 
         'instal', 'install', 'establish', 'constitute', 'hire', 'invest in', 'start', 'begin', 'init', 'initialize'
     ];
@@ -49,7 +49,7 @@ class ChatbotController extends ActiveController
     ];
 
     private $setCurrencyIntent = [
-        'set currency', 'currency', 'default', 'current'
+        'set currency', 'currency', 'default', 'current', 'set', 'wallet', 'create wallet'
     ];
 
     // ***************************************************

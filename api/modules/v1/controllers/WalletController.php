@@ -1,9 +1,8 @@
 <?php
 
 namespace api\modules\v1\controllers;
-
+use api\modules\v1\controllers\TransactionController;
 use api\modules\v1\models\Wallet;
-use api\modules\v1\models\User;
 use Yii;
 use yii\data\Pagination;
 use yii\rest\ActiveController;
@@ -49,17 +48,25 @@ class WalletController extends ActiveController
             throw new BadRequestHttpException('Mandatory fields must be filled.');
         }
 
+        // Convert the currency to uppercase
+        $currency = strtoupper($request->post('currency'));
+
         // Check if the user already have an wallet with the same currency
         if (Wallet::find()->where(['user_id' => $request->post('user_id')])
             ->andWhere(['currency' => $request->post('currency')])->one()) {
-            throw new BadRequestHttpException('The user already have one ' . strtoupper($request->post('currency')) . ' wallet.');
+            throw new BadRequestHttpException('The user already have one ' . $currency . ' wallet.');
+        }
+
+        // Check if the currency is valid
+        if (!TransactionController::checkCurrencyExists($currency)) {
+            throw new BadRequestHttpException('The currency ' . $currency . ' does not exist.');
         }
 
         // Set the new wallet attributes
         $wallet = new Wallet();
         $wallet->code = md5(uniqid(rand(), true));
         $wallet->user_id = $request->post('user_id');
-        $wallet->currency = strtoupper($request->post('currency'));
+        $wallet->currency = $currency;
         $wallet->balance = 0.00;
         
         // Check if the user already have a default wallet
@@ -75,6 +82,32 @@ class WalletController extends ActiveController
         }
 
         return $wallet;
+    }
+
+    /**
+     * Check if the user has a specific wallet
+     */
+    public function actionCheckWallet()
+    {
+        $request = Yii::$app->request;
+
+        // Check the required info
+        if (
+            !$request->post('user_id') ||
+            !$request->post('currency')
+        ) {
+            throw new BadRequestHttpException('Mandatory fields must be filled.');
+        }
+
+        // Check if the user already have an wallet with the same currency
+        return Wallet::find()->where(['user_id' => $request->post('user_id')])
+        ->andWhere(['currency' => $request->post('currency')])->one();
+
+        if (isset($wallet) && !empty($wallet)) {
+            return $wallet;
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -176,42 +209,4 @@ class WalletController extends ActiveController
             throw new ServerErrorHttpException();
         }
     }
-
-    public function actionGetByCurrency()
-    {
-        $request = Yii::$app->request;
-        $searchCurrency = $request->post('currency');
-        $paginationPageSize = $request->post('per-page');
-        $paginationPage = $request->post('page');
-
-        if (!$searchCurrency || !$paginationPageSize || !$paginationPage) {
-            throw new BadRequestHttpException('Basic input not provided');
-        } else {
-            if ($searchCurrency === 'farma') {
-                $searchCurrencyId = "1";
-            } elseif ($searchCurrency === 'pet') {
-                $searchCurrencyId = "2";
-            } else {
-                throw new BadRequestHttpException('Bad request: currency not provided');
-            }
-        }
-
-        $queryCompanies = Wallet::find()
-            ->joinWith('location')
-            ->andWhere(['=', 'business_currency', $searchCurrencyId]);
-
-        $countQuery = clone $queryCompanies;
-        $pages = new Pagination(['totalCount' => $countQuery->count(), 'pageSize' => $paginationPageSize, 'page' => $paginationPage - 1]);
-        $models = $queryCompanies->offset($pages->offset)
-            ->limit($pages->limit)
-            ->asArray()
-            ->all();
-
-        header('X-Pagination-Total-Count: '. $pages->totalCount);
-        header('X-Pagination-Per-Page: '. $pages->getPageSize());
-
-        return $models;
-    }
-
-    
 }

@@ -1,7 +1,6 @@
 <?php
 
 namespace api\modules\v1\controllers;
-
 use api\modules\v1\models\Transaction;
 use Yii;
 use yii\data\Pagination;
@@ -49,7 +48,7 @@ class TransactionController extends ActiveController
     /**
      * Function to call an external API
      */
-    function callAPI($method, $url, $data = false)
+    public static function callAPI($method, $url, $data = false)
     {
         $curl = curl_init();
 
@@ -80,6 +79,47 @@ class TransactionController extends ActiveController
         curl_close($curl);
 
         return $result;
+    }
+
+    /**
+     * Function to receive message
+     */
+    public static function checkCurrencyExists($currency_)
+    {
+        $BASE_URL = "https://api.exchangeratesapi.io/";
+
+        // Check the user message
+        if (empty($currency_)) {
+            throw new BadRequestHttpException('The currency cannot be empty.');
+        } else {
+            // Set the opration
+            $operation = "latest";
+
+            // Prepare the input
+            $currency_ = strtoupper($currency_);
+
+            // Prepare the request data
+            $currencyData = array();
+            $currencyData['base'] = $currency_;
+
+            // Call the external API
+            $result = self::callAPI('GET', $BASE_URL . $operation, $currencyData);
+
+            if (isset($result)) {
+                // Decode the json to array
+                $result = json_decode($result, true);
+                
+                if (isset($result['error'])) {
+                    // The currency does not exist
+                    return false;
+                } else {
+                    // The currency exists
+                    return true;
+                }
+            } else {
+                throw new HttpException('It was not possible to contact the currency exchange server.');
+            }
+        }
     }
 
     /**
@@ -116,7 +156,7 @@ class TransactionController extends ActiveController
             $conversionData['symbols'] = $to_currency;
 
             // Call the external API
-            $result = $this->callAPI('GET', $this->BASE_URL . $operation, $conversionData);
+            $result = self::callAPI('GET', $this->BASE_URL . $operation, $conversionData);
 
             if (isset($result)) {
                 // Decode the json to array
