@@ -51,7 +51,9 @@ class Transaction extends \yii\db\ActiveRecord
             [['type', 'amount', 'status'], 'required'],
             [['amount', 'converted_amount'], 'number'],
             [['status'], 'integer'],
-            [['type', 'origin_wallet', 'destiny_wallet', 'from_currency', 'to_currency'], 'string'],
+            [['type'], 'string', 'max' => 20],
+            [['from_currency', 'to_currency'], 'string', 'max' => 10],
+            [['origin_wallet', 'destiny_wallet'], 'string', 'max' => 255],
             [['created_at', 'updated_at'], 'safe'],
         ];
     }

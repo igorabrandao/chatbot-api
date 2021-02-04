@@ -190,6 +190,15 @@ class TransactionController extends ActiveController
             $from_currency = strtoupper($from_currency);
             $to_currency = strtoupper($to_currency);
 
+            // Check if the both currency are valid
+            if (!self::checkCurrencyExists($from_currency)) {
+                throw new BadRequestHttpException('The currency ' . $from_currency . ' does not exist.');
+            }
+
+            if (!self::checkCurrencyExists($to_currency)) {
+                throw new BadRequestHttpException('The currency ' . $to_currency . ' does not exist.');
+            }
+
             // Prepare the request data
             $conversionData = array();
             $conversionData['base'] = $from_currency;

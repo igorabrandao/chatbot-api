@@ -40,8 +40,9 @@ class Wallet extends \yii\db\ActiveRecord
         return [
             [['code', 'user_id', 'currency', 'balance', 'is_default'], 'required'],
             [['balance'], 'number'],
-            [['code', 'currency'], 'string'],
             [['user_id', 'is_default'], 'integer'],
+            [['currency'], 'string', 'max' => 10],
+            [['code'], 'string', 'max' => 255],
             [['created_at', 'updated_at'], 'safe'],
         ];
     }

@@ -58,12 +58,17 @@ class ChatbotController extends ActiveController
     ];
 
     private $withdrawIntent = [
-        'withdraw', 'remove', 'extract', 'draw out', 'pull out', 'take back', 'take money', 'back', 'pull'
+        'withdraw', 'get', 'remove', 'extract', 'draw out', 'pull out', 'take back', 'take money', 'back', 'pull'
     ];
 
     private $showBalanceIntent = [
         'show', 'balance', 'display', 'manifest', 'exhibit', 'reveal', 'communicate', 'indicate', 'express', 'present',
         'view', 'see', 'lecture', 'expose', 'exposition', 'presentation', 'array', 'arrangement', 'exhibition'
+    ];
+
+    private $cancelIntent = [
+        'cancel', 'call of', 'abandon', 'give up', 'back', 'go back', 'return', 'menu', 'nullify', 'axe',
+        'neutralize', 'stop', 'cease', 'end', 'previous', 'halt', 'terminate'
     ];
 
     // ***************************************************
@@ -179,6 +184,12 @@ class ChatbotController extends ActiveController
                 // Show balance
                 if (in_array($item, $this->showBalanceIntent)) {
                     $actionToPerform = 'showBalance';
+                    break;
+                }
+
+                // Cancel
+                if (in_array($item, $this->cancelIntent)) {
+                    $actionToPerform = 'cancel';
                     break;
                 }
             }
