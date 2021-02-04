@@ -63,7 +63,7 @@ class ChatbotController extends ActiveController
 
     private $showBalanceIntent = [
         'show', 'balance', 'display', 'manifest', 'exhibit', 'reveal', 'communicate', 'indicate', 'express', 'present',
-        'lecture', 'expose', 'exposition', 'presentation', 'array', 'arrangement', 'exhibition'
+        'view', 'see', 'lecture', 'expose', 'exposition', 'presentation', 'array', 'arrangement', 'exhibition'
     ];
 
     // ***************************************************
