@@ -94,6 +94,9 @@ return [
                         // ** Transaction endpoints
                         // ***************************************************
                         'POST convert-currency' => 'convert-currency',
+                        'POST deposit-money' => 'deposit-money',
+                        'POST withdraw-money' => 'withdraw-money',
+                        'POST show-wallet-balance' => 'show-wallet-balance',
                     ]
                 ],
                 [

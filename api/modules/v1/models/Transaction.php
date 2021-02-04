@@ -11,8 +11,9 @@ use yii\behaviors\TimestampBehavior;
  * @property int $id
  * @property string $type
  * @property string $amount
- * @property int $origin_wallet
- * @property int $destiny_wallet
+ * @property string $converted_amount
+ * @property string $origin_wallet
+ * @property string $destiny_wallet
  * @property string $from_currency
  * @property string $to_currency
  * @property int $status
@@ -24,10 +25,10 @@ use yii\behaviors\TimestampBehavior;
 class Transaction extends \yii\db\ActiveRecord
 {
     // Transaction type consts
-    const DEPOSIT = 'D';
-    const WITHDRAW = 'W';
-    const SHOW_BALANCE = 'SB';
-    const QUOTATION = 'Q';
+    const DEPOSIT = 'Deposit';
+    const WITHDRAW = 'Withdraw';
+    const SHOW_BALANCE = 'Show_balance';
+    const CONVERSION = 'Conversion';
 
     // Transaction status consts
     const COMPLETE = 1;
@@ -47,13 +48,11 @@ class Transaction extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['type', 'amount', 'origin_wallet', 'status'], 'required'],
-            [['amount'], 'number'],
-            [['origin_wallet', 'destiny_wallet', 'status'], 'integer'],
-            [['type', 'from_currency', 'to_currency'], 'string'],
+            [['type', 'amount', 'status'], 'required'],
+            [['amount', 'converted_amount'], 'number'],
+            [['status'], 'integer'],
+            [['type', 'origin_wallet', 'destiny_wallet', 'from_currency', 'to_currency'], 'string'],
             [['created_at', 'updated_at'], 'safe'],
-            [['origin_wallet'], 'exist', 'skipOnError' => true, 'targetClass' => Wallet::className(), 'targetAttribute' => ['wallet_id' => 'id']],
-            [['destiny_wallet'], 'exist', 'skipOnError' => true, 'targetClass' => Wallet::className(), 'targetAttribute' => ['wallet_id' => 'id']],
         ];
     }
 
@@ -76,6 +75,7 @@ class Transaction extends \yii\db\ActiveRecord
             'id' => 'ID',
             'type' => 'Transaction Type',
             'amount' => 'Transaction Amount',
+            'converted_amount' => 'Transaction Converted Amount',
             'origin_wallet' => 'Transaction Origin Wallet',
             'destiny_wallet' => 'Transaction Destiny Wallet',
             'from_currency' => 'From Currency',
@@ -89,27 +89,9 @@ class Transaction extends \yii\db\ActiveRecord
     public function extraFields()
     {
         $extraFields = parent::extraFields();
-        $extraFields["origin_wallet"] = "origin_wallet";
-        $extraFields["destiny_wallet"] = "destiny_wallet";
         return $extraFields;
     }
-
-    /**
-     * @return \yii\db\ActiveQuery
-     */
-    public function getOriginWallet()
-    {
-        return $this->hasOne(Wallet::className(), ['origin_wallet_id' => 'id']);
-    }
-
-    /**
-     * @return \yii\db\ActiveQuery
-     */
-    public function getDestinyWallet()
-    {
-        return $this->hasOne(Wallet::className(), ['destiny_wallet_id' => 'id']);
-    }
-
+    
     /**
      * @return boolean
      */
@@ -137,9 +119,9 @@ class Transaction extends \yii\db\ActiveRecord
     /**
      * @return boolean
      */
-    public function isCurrencyQuotation()
+    public function isCurrencyConversion()
     {
-        return $this->type == self::QUOTATION;
+        return $this->type == self::CONVERSION;
     }
 
     /**

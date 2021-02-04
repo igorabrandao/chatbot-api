@@ -1,9 +1,11 @@
 <?php
 
 namespace api\modules\v1\controllers;
+
 use api\modules\v1\models\Transaction;
+use api\modules\v1\models\Wallet;
+use GuzzleHttp\Exception\ServerException;
 use Yii;
-use yii\data\Pagination;
 use yii\rest\ActiveController;
 use yii\filters\auth\HttpBearerAuth;
 use yii\web\BadRequestHttpException;
@@ -43,6 +45,37 @@ class TransactionController extends ActiveController
         ];
 
         return $behaviors;
+    }
+
+    /**
+     * Function to log the transaction
+     */
+    private function logTransaction(
+        $type_,
+        $amount_,
+        $converted_amount_,
+        $origin_wallet_,
+        $destiny_wallet_,
+        $from_currency_,
+        $to_currency_,
+        $status_
+    ) {
+        // Set the new transaction log attributes
+        $transaction = new Transaction();
+        $transaction->type = $type_;
+        $transaction->amount = $amount_;
+        $transaction->converted_amount = $converted_amount_;
+        $transaction->origin_wallet = $origin_wallet_;
+        $transaction->destiny_wallet = $destiny_wallet_;
+        $transaction->from_currency = $from_currency_;
+        $transaction->to_currency = $to_currency_;
+        $transaction->status = $status_;
+        
+        if (!$transaction->save()) {
+            return $transaction->getFirstErrors();
+        }
+
+        return $transaction;
     }
 
     /**
@@ -108,7 +141,7 @@ class TransactionController extends ActiveController
             if (isset($result)) {
                 // Decode the json to array
                 $result = json_decode($result, true);
-                
+
                 if (isset($result['error'])) {
                     // The currency does not exist
                     return false;
@@ -125,17 +158,24 @@ class TransactionController extends ActiveController
     /**
      * Function to receive message
      */
-    public function actionConvertCurrency()
+    public function actionConvertCurrency($from_currency_ = '', $to_currency_ = '', $amount_ = 0)
     {
         // Recevei the POST params
         $request = Yii::$app->request;
-        $from_currency = $request->post('from_currency');
-        $to_currency = $request->post('to_currency');
-        $amount = $request->post('amount');
+
+        if (strcmp($from_currency_, '') != 0 && strcmp($to_currency_, '') != 0 && $amount_ != 0) {
+            $from_currency = $from_currency_;
+            $to_currency = $to_currency_;
+            $amount = $amount_;
+        } else {
+            $from_currency = $request->post('from_currency');
+            $to_currency = $request->post('to_currency');
+            $amount = $request->post('amount');
+        }
 
         $result = null;
 
-        // Check the user message
+        // Check the mandatory fields
         if (empty($from_currency)) {
             throw new BadRequestHttpException('The origin currency cannot be empty.');
         } else if (empty($to_currency)) {
@@ -165,7 +205,15 @@ class TransactionController extends ActiveController
                 $result['converted_amount'] = $amount * $result["rates"][$to_currency];
                 $result['from_currency'] = $from_currency;
                 $result['to_currency'] = $to_currency;
+
+                // Log the transaction as complete
+                $this->logTransaction(Transaction::CONVERSION, $result['amount'], $result['converted_amount'], '', '',
+                $result['from_currency'], $result['to_currency'], Transaction::COMPLETE);
             } else {
+                // Log the transaction as incomplete
+                $this->logTransaction(Transaction::CONVERSION, $amount, 0, '', '', $from_currency, $to_currency, 
+                Transaction::INCOMPLETE);
+
                 throw new HttpException('It was not possible to contact the currency exchange server.');
             }
         }
@@ -173,39 +221,226 @@ class TransactionController extends ActiveController
         return $result;
     }
 
-    public function actionGetByType()
+    /**
+     * Function to deposit money into a certain wallet
+     */
+    public function actionDepositMoney()
     {
+        // Recevei the POST params
         $request = Yii::$app->request;
-        $searchType = $request->post('type');
-        $paginationPageSize = $request->post('per-page');
-        $paginationPage = $request->post('page');
+        $user_id = $request->post('user_id');
+        $amount_currency = $request->post('amount_currency');
+        $wallet_currency = $request->post('wallet_currency');
+        $amount = $request->post('amount');
 
-        if (!$searchType || !$paginationPageSize || !$paginationPage) {
-            throw new BadRequestHttpException('Basic input not provided');
+        // Check the mandatory fields
+        if (empty($user_id)) {
+            throw new BadRequestHttpException('The user ID must be informed.');
+        } else if (empty($amount_currency)) {
+            throw new BadRequestHttpException('The amount currency must be informed.');
+        } else if (empty($wallet_currency)) {
+            throw new BadRequestHttpException('The wallet currency must be informed.');
+        } else if (empty($amount)) {
+            throw new BadRequestHttpException('The amount must be informed.');
         } else {
-            if ($searchType === 'farma') {
-                $searchTypeId = "1";
-            } elseif ($searchType === 'pet') {
-                $searchTypeId = "2";
+            // Prepare the input
+            $amount = number_format(floatval($amount), 2);
+            $amount_currency = strtoupper($amount_currency);
+            $wallet_currency = strtoupper($wallet_currency);
+
+            // Try to retrieve the wallet info
+            $wallet = Wallet::find()->where(['user_id' => $user_id])->andWhere(['currency' => $wallet_currency])->one();
+
+            // Check if the wallet exists
+            if (isset($wallet) && !empty($wallet)) {
+                // Check if needs to convert
+                if (strcmp($amount_currency, $wallet_currency) != 0) {
+                    // Gets the new currency quotation
+                    $result = $this->actionConvertCurrency($amount_currency, $wallet_currency, $amount);
+
+                    // Check if the conversion happend succesfully
+                    if (isset($result) && !empty($result)) {
+                        // Set the new wallet balance with conversion
+                        $wallet->balance += $result['converted_amount'];
+                    } else {
+                        throw new HttpException('It was not possible to contact the currency exchange server.');
+                    }
+                } else {
+                    // Set the new wallet balance without conversion
+                    $wallet->balance += $amount;
+                }
+
+                // Update the the wallet balance
+                if ($wallet->save()) {
+                    // Log the transaction as complete
+                    if (isset($result) && !empty($result)) {
+                        $this->logTransaction(Transaction::DEPOSIT, $amount, $result['converted_amount'], '', $wallet->code,
+                        $amount_currency, $wallet_currency, Transaction::COMPLETE);
+                    } else {
+                        $this->logTransaction(Transaction::DEPOSIT, $amount, 0, '', $wallet->code,
+                        $amount_currency, $wallet_currency, Transaction::COMPLETE);
+                    }
+
+                    // Return the wallet updated
+                    return $wallet;
+                } else {
+                    // Log the transaction as incomplete
+                    if (isset($result) && !empty($result)) {
+                        $this->logTransaction(Transaction::DEPOSIT, $amount, $result['converted_amount'], '', $wallet->code,
+                        $amount_currency, $wallet_currency, Transaction::INCOMPLETE);
+                    } else {
+                        $this->logTransaction(Transaction::DEPOSIT, $amount, 0, '', $wallet->code,
+                        $amount_currency, $wallet_currency, Transaction::INCOMPLETE);
+                    }
+
+                    throw new ServerErrorHttpException("It wasn't possible to complete the deposit");
+                }
             } else {
-                throw new BadRequestHttpException('Bad request: type not provided');
+                throw new BadRequestHttpException('The wallet ' . $wallet_currency . ' was not found.');
             }
         }
+    }
 
-        $queryCompanies = Transaction::find()
-            ->joinWith('location')
-            ->andWhere(['=', 'business_type', $searchTypeId]);
+    /**
+     * Function to deposit money into a certain wallet
+     */
+    public function actionWithdrawMoney()
+    {
+        // Recevei the POST params
+        $request = Yii::$app->request;
+        $user_id = $request->post('user_id');
+        $amount_currency = $request->post('amount_currency');
+        $wallet_currency = $request->post('wallet_currency');
+        $amount = $request->post('amount');
 
-        $countQuery = clone $queryCompanies;
-        $pages = new Pagination(['totalCount' => $countQuery->count(), 'pageSize' => $paginationPageSize, 'page' => $paginationPage - 1]);
-        $models = $queryCompanies->offset($pages->offset)
-            ->limit($pages->limit)
-            ->asArray()
-            ->all();
+        // Check the mandatory fields
+        if (empty($user_id)) {
+            throw new BadRequestHttpException('The user ID must be informed.');
+        } else if (empty($amount_currency)) {
+            throw new BadRequestHttpException('The amount currency must be informed.');
+        } else if (empty($wallet_currency)) {
+            throw new BadRequestHttpException('The wallet currency must be informed.');
+        } else if (empty($amount)) {
+            throw new BadRequestHttpException('The amount must be informed.');
+        } else {
+            // Prepare the input
+            $amount = number_format(floatval($amount), 2);
+            $amount_currency = strtoupper($amount_currency);
+            $wallet_currency = strtoupper($wallet_currency);
 
-        header('X-Pagination-Total-Count: ' . $pages->totalCount);
-        header('X-Pagination-Per-Page: ' . $pages->getPageSize());
+            // Try to retrieve the wallet info
+            $wallet = Wallet::find()->where(['user_id' => $user_id])->andWhere(['currency' => $wallet_currency])->one();
 
-        return $models;
+            // Check if the wallet exists
+            if (isset($wallet) && !empty($wallet)) {
+                // Check if needs to convert
+                if (strcmp($amount_currency, $wallet_currency) != 0) {
+                    // Gets the new currency quotation
+                    $result = $this->actionConvertCurrency($amount_currency, $wallet_currency, $amount);
+
+                    // Check if the conversion happend succesfully
+                    if (isset($result) && !empty($result)) {
+                        // Check if the wallet have enough fund
+                        if ($wallet->balance >= $result['converted_amount']) {
+                            // Perform the balance withdraw with conversion
+                            $wallet->balance -= $result['converted_amount'];
+                        } else {
+                            // Log the transaction as complete
+                            $this->logTransaction(Transaction::WITHDRAW, $amount, $result['converted_amount'], $wallet->code, '',
+                            $amount_currency, $wallet_currency, Transaction::INCOMPLETE);
+
+                            throw new BadRequestHttpException('The wallet ' . $wallet_currency . ' does not have enough fund for this operation.');
+                        }
+                    } else {
+                        throw new HttpException('It was not possible to contact the currency exchange server.');
+                    }
+                } else {
+                    // Check if the wallet have enough fund
+                    if ($wallet->balance >= $amount) {
+                        // Perform the balance withdraw without conversion
+                        $wallet->balance -= $amount;
+                    } else {
+                        // Log the transaction as incomplete
+                        $this->logTransaction(Transaction::WITHDRAW, $amount, 0, $wallet->code, '',
+                        $amount_currency, $wallet_currency, Transaction::INCOMPLETE);
+
+                        throw new BadRequestHttpException('The wallet ' . $wallet_currency . ' does not have enough fund for this operation.');
+                    }
+                }
+
+                // Update the the wallet balance
+                if ($wallet->save()) {
+                    // Log the transaction as complete
+                    if (isset($result) && !empty($result)) {
+                        $this->logTransaction(Transaction::WITHDRAW, $amount, $result['converted_amount'], $wallet->code, '',
+                        $amount_currency, $wallet_currency, Transaction::COMPLETE);
+                    } else {
+                        $this->logTransaction(Transaction::WITHDRAW, $amount, 0, $wallet->code, '',
+                        $amount_currency, $wallet_currency, Transaction::COMPLETE);
+                    }
+
+                    // Return the wallet updated
+                    return $wallet;
+                } else {
+                    // Log the transaction as incomplete
+                    if (isset($result) && !empty($result)) {
+                        $this->logTransaction(Transaction::WITHDRAW, $amount, $result['converted_amount'], $wallet->code, '',
+                        $amount_currency, $wallet_currency, Transaction::INCOMPLETE);
+                    } else {
+                        $this->logTransaction(Transaction::WITHDRAW, $amount, 0, $wallet->code, '',
+                        $amount_currency, $wallet_currency, Transaction::INCOMPLETE);
+                    }
+
+                    throw new ServerErrorHttpException("It wasn't possible to complete the withdraw");
+                }
+            } else {
+                throw new BadRequestHttpException('The wallet ' . $wallet_currency . ' was not found.');
+            }
+        }
+    }
+
+    /**
+     * Function to deposit money into a certain wallet
+     */
+    public function actionShowWalletBalance()
+    {
+        // Recevei the POST params
+        $request = Yii::$app->request;
+        $user_id = $request->post('user_id');
+        $currency = $request->post('currency');
+
+        // Check the mandatory fields
+        if (empty($user_id)) {
+            throw new BadRequestHttpException('The user ID must be informed.');
+        } else if (empty($currency)) {
+            throw new BadRequestHttpException('The wallet currency must be informed.');
+        } else {
+            // Prepare the input
+            $currency = strtoupper($currency);
+
+            // Set the wallet object
+            $wallet = null;
+
+            // Check whether retrieve all wallets or a specific one
+            if (strcmp($currency, 'ALL') == 0) {
+                // Try to retrieve all wallets info
+                $wallet = Wallet::find()->where(['user_id' => $user_id])->all();
+
+                // Log the transaction as complete
+                $this->logTransaction(Transaction::SHOW_BALANCE, 0, 0, 'ALL', '', '', '', Transaction::COMPLETE);
+            } else {
+                // Try to retrieve a specific wallet info
+                $wallet = Wallet::find()->where(['user_id' => $user_id])->andWhere(['currency' => $currency])->one();
+
+                // Log the transaction as complete
+                if (isset($wallet) && !empty($wallet)) {
+                    $this->logTransaction(Transaction::SHOW_BALANCE, 0, 0, $wallet->code, '', $currency, '', Transaction::COMPLETE);
+                } else {
+                    $this->logTransaction(Transaction::SHOW_BALANCE, 0, 0, '', '', $currency, '', Transaction::COMPLETE);
+                }
+            }
+
+            return $wallet;
+        }
     }
 }
