@@ -1,11 +1,11 @@
 {
-  "name": "web-farma-api",
-  "description": "WebFarma - API - 1.15.1",
+  "name": "chatbot-api",
+  "description": "Chatbot API - 1.0.1",
   "keywords": [
     "project",
     "api"
   ],
-  "homepage": "http://www.interativadigital.com/",
+  "homepage": "https://igorabrandao.com.br",
   "type": "project",
   "license": "BSD-3-Clause",
   "minimum-stability": "stable",
