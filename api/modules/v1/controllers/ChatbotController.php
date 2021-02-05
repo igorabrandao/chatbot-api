@@ -38,14 +38,16 @@ class ChatbotController extends ActiveController
     ];
 
     private $registerIntent = [
-        'register', 'signup', 'sign-up', 'sign up', 'create account', 'account', 'roll', 'record', 'set account',
+        'register', 'signup', 'sign-up', 'sign up', 'create an account', 'create account', 'account', 'roll', 'record', 'set account',
         'submit', 'engage', 'recruit', 'engage', 'take on', 'admit', 'lay on', 'employ', 'make', 'assign',
-        'instal', 'install', 'establish', 'constitute', 'hire', 'invest in', 'start', 'begin', 'init', 'initialize'
+        'instal', 'install', 'establish', 'constitute', 'hire', 'invest in', 'start', 'begin', 'init', 'initialize',
+        'account.', 'account,', 'account!', 'account?', 'account@'
     ];
 
     private $quotationIntent = [
-        'convert', 'quotation', 'quote', 'exchange', 'change', 'money', 'cash', 'paper',
-        'bill', 'coin', 'specie', 'dollar', 'euro', 'real', 'usd', 'eur', 'brl'
+        'convert', 'quotation', 'quote', 'exchange', 'change', 'quotes', 'swap', 'shift',
+        'transform', 'modify', 'remodel', 'reshape', 'redo', 'modification', 'turn', 'translate', 'cast',
+        'transmute', 'permute'
     ];
 
     private $setCurrencyIntent = [
@@ -53,12 +55,13 @@ class ChatbotController extends ActiveController
     ];
 
     private $depositIntent = [
-        'deposit', 'down payment', 'pay', 'send', 'sent', 'pledge', 'front money', 'put', 'place', 'dispatch',
+        'deposit', 'down payment', 'send', 'sent', 'pledge', 'front money', 'put', 'place', 'dispatch',
         'mail', 'address', 'get off', 'convey', 'consign', 'direct', 'forward', 'send on', 'remit', 'post'
     ];
 
     private $withdrawIntent = [
-        'withdraw', 'get', 'remove', 'extract', 'draw out', 'pull out', 'take back', 'take money', 'back', 'pull'
+        'withdraw', 'get money', 'remove', 'extract', 'draw out', 'pull out', 'take back', 'take money', 'back', 'pull',
+        'give', 'give me', 'pay', 'pay me', 'take', 'get some', 'get'
     ];
 
     private $showBalanceIntent = [
@@ -69,6 +72,12 @@ class ChatbotController extends ActiveController
     private $cancelIntent = [
         'cancel', 'call of', 'abandon', 'give up', 'back', 'go back', 'return', 'menu', 'nullify', 'axe',
         'neutralize', 'stop', 'cease', 'end', 'previous', 'halt', 'terminate'
+    ];
+
+    private $greetingIntent = [
+        'hello', 'good', 'good morning', 'good afternoon', 'good evening', 'it’s nice to meet you', 
+        'it’s a pleasure to meet you', 'whats up', 'hey', 'hi', 'how', 'what’s up', 'long time',
+        'are you ok', 'sup', 'hiya'
     ];
 
     // ***************************************************
@@ -190,6 +199,12 @@ class ChatbotController extends ActiveController
                 // Cancel
                 if (in_array($item, $this->cancelIntent)) {
                     $actionToPerform = 'cancel';
+                    break;
+                }
+
+                // Cancel
+                if (in_array($item, $this->greetingIntent)) {
+                    $actionToPerform = 'greeting';
                     break;
                 }
             }

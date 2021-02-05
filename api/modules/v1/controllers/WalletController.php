@@ -102,12 +102,6 @@ class WalletController extends ActiveController
         // Check if the user already have an wallet with the same currency
         return Wallet::find()->where(['user_id' => $request->post('user_id')])
         ->andWhere(['currency' => $request->post('currency')])->one();
-
-        if (isset($wallet) && !empty($wallet)) {
-            return $wallet;
-        } else {
-            return null;
-        }
     }
 
     /**
@@ -125,15 +119,8 @@ class WalletController extends ActiveController
         }
 
         // Retrieve the wallet info
-        $userWallets = Wallet::find()->where(['user_id' => $request->post('user_id')])
-                ->andWhere(['is_default' => Wallet::ISDEFAULT])
-                ->all();
-
-        if (sizeof($userWallets) > 0) {
-            return true;
-        } else {
-            return false;
-        }
+        return Wallet::find()->where(['user_id' => $request->post('user_id')])
+                ->andWhere(['is_default' => Wallet::ISDEFAULT])->one();
     }
 
     /**
