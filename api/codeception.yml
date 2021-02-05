@@ -1,0 +1,40 @@
+# codeception.yml
+namespace: tests
+actor: Tester
+paths:
+    tests: tests
+    log: tests/_output
+    data: tests/_data
+    helpers: tests/_support
+settings:
+    bootstrap: _bootstrap.php
+    suite_class: \PHPUnit_Framework_TestSuite
+    colors: true
+    memory_limit: 1024M
+    log: true
+modules:
+    config:
+        test_entry_url: https://chatbotapi.igorabrandao.com.br/index-test.php
+        Yii2:
+            configFile: 'config/test-local.php'
+# Coverage test section
+coverage:
+    enabled: true
+    # url of file which includes c3 router.
+    c3_url: 'https://chatbotapi.igorabrandao.com.br/api/'
+    include:
+        - config/main.php
+        - modules/v1/models/*
+        - modules/v1/controllers/*
+        - tests/_support/ApiTester.php
+        - tests/_support/TransactionTester.php
+        - tests/api/TransactionCest.php
+    # The remote option specifies if you run your application actually runs on another server.
+    # If your webserver runs on the same node and uses the same codebase, disable this option.
+    remote: false
+    remote_config: codeception.yml
+    remote_context_options:
+        http:
+            timeout: 60
+        ssl:
+            verify_peer: false

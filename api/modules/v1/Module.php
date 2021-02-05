@@ -31,14 +31,10 @@ class Module extends \yii\base\Module
             'class' => Cors::className(),
             'cors' => [
                 'Origin' => [
-                    'http://loja.webfarma.online',
-                    'https://loja.webfarma.online',
-                    'http://app.webfarma.online',
-                    'https://app.webfarma.online',
-                    'http://painel.webfarma.online',
-                    'https://painel.webfarma.online',
-                    'http://webfarma.online',
-                    'https://webfarma.online',
+                    'http://chatbot.igorabrandao.com.br/',
+                    'http://chatbot.igorabrandao.com.br/chatbot',
+                    'https://chatbot.igorabrandao.com.br/',
+                    'https://chatbot.igorabrandao.com.br/chatbot',
                     'http://localhost:4200',
                     'http://localhost:4201',
                     'http://localhost:4202',

@@ -1,0 +1,10 @@
+class_name: ApiTester
+
+modules:
+    enabled:
+        - REST
+    config:
+        REST:
+          url: https://chatbotapi.igorabrandao.com.br/v1/
+          depends: PhpBrowser
+          part: Json

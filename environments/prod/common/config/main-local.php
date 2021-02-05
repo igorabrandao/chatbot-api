@@ -3,9 +3,9 @@ return [
     'components' => [
         'db' => [
             'class' => 'yii\db\Connection',
-            'dsn' => 'mysql:host=localhost;dbname=webfarma_db',
-            'username' => 'root',
-            'password' => '*PETfarma2020',
+            'dsn' => 'mysql:host=localhost;dbname=igora790_jobsity_challenge',
+            'username' => 'igora790_jobsity',
+            'password' => '*_zl8RT&?c3W;',
             'charset' => 'utf8',
         ],
         'mailer' => [
