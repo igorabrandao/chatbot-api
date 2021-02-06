@@ -94,6 +94,6 @@ class ChatbotCest
          * 
          * @param $expected_result => text there is expected to be inside the generated result
          */
-        //$I->testchatbotIdentifyIntent($testCase['message'], $testCase['expected_result']);
+        $I->testchatbotIdentifyIntent($testCase['message'], $testCase['expected_result']);
     }
 }

@@ -253,7 +253,7 @@ class TransactionController extends ActiveController
             throw new BadRequestHttpException('The amount must be informed.');
         } else {
             // Prepare the input
-            $amount = number_format(floatval($amount), 2);
+            $amount = floatval($amount);
             $amount_currency = strtoupper($amount_currency);
             $wallet_currency = strtoupper($wallet_currency);
 
@@ -333,7 +333,7 @@ class TransactionController extends ActiveController
             throw new BadRequestHttpException('The amount must be informed.');
         } else {
             // Prepare the input
-            $amount = number_format(floatval($amount), 2);
+            $amount = floatval($amount);
             $amount_currency = strtoupper($amount_currency);
             $wallet_currency = strtoupper($wallet_currency);
 
